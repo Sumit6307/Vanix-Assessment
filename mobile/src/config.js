@@ -14,9 +14,12 @@ import { Platform } from 'react-native';
 const DEFAULT_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
 const DEFAULT_PORT = '3000';
 
+// Support cloud deployment environment variable (e.g. Vercel EXPO_PUBLIC_API_URL)
+const envApiUrl = typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_API_URL;
+
 export const CONFIG = {
   // Base URL for the Vanix IoT backend REST API
-  API_BASE_URL: `http://${DEFAULT_HOST}:${DEFAULT_PORT}/api`,
+  API_BASE_URL: envApiUrl || `http://${DEFAULT_HOST}:${DEFAULT_PORT}/api`,
   
   // Polling / auto-refresh intervals (ms)
   AUTO_REFRESH_INTERVAL_MS: 15000, // 15s to match device packet rate
