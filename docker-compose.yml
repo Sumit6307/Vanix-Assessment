@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vanix-iot-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - AES_KEY=04f4848ce46f9384da9b2f915dcb3bd5e9ea218e7e415776d85393391dcbe775
+      - PORT=3000
+      - DB_PATH=/app/backend/data/vanix.db
+    volumes:
+      - vanix_data:/app/backend/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  vanix_data:
+    driver: local
