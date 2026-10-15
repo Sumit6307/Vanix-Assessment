@@ -1,29 +1,33 @@
 # Vanix IoT Telemetry & Alert Sentinel
 
-An enterprise-grade, end-to-end IoT ingestion backend and 100% responsive mobile telemetry application. It securely ingests AES-256-GCM encrypted field packets, decrypts and parses 256-byte binary sensor telemetry, detects duplicate forwardings, evaluates real-time alert rules, stores time-series readings, and serves a high-performance REST API to a mobile monitoring application.
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20App-success?logo=vercel&style=for-the-badge)](https://vanix-assessment-mobile.vercel.app/)
+[![Render API](https://img.shields.io/badge/Render-Live%20Backend-46E3B7?logo=render&style=for-the-badge)](https://vanix-iot-backend.onrender.com/api)
+[![Loom Walkthrough](https://img.shields.io/badge/Loom-Video%20Demo-625DF5?logo=loom&style=for-the-badge)](https://www.loom.com/share/711abafc1a9b48378e931d07608397bd)
+[![Tests Passing](https://img.shields.io/badge/Tests-48%2F48%20Passed%20(100%25)-brightgreen?style=for-the-badge)](./backend/tests)
+
+An enterprise-grade, end-to-end IoT ingestion backend and 100% responsive mobile monitoring application. The system securely ingests AES-256-GCM encrypted field packets, decrypts and parses 256-byte binary sensor telemetry, detects duplicate forwardings, evaluates real-time alert rules, stores time-series readings, and serves a high-performance REST API to a mobile monitoring application.
 
 ---
 
 ## 🌐 Live Deployments & Demo Video
 
-| Resource | URL | Status |
+| Resource | Direct Link | Description |
 | :--- | :--- | :--- |
-| **🚀 Live Mobile Web App (Vercel)** | [https://vanix-assessment-mobile.vercel.app/](https://vanix-assessment-mobile.vercel.app/) | ![Vercel](https://img.shields.io/badge/Vercel-Deployed-success?logo=vercel) |
-| **⚡ Live REST API Backend (Render)** | [https://vanix-iot-backend.onrender.com/api](https://vanix-iot-backend.onrender.com/api) | ![Render](https://img.shields.io/badge/Render-Online-blue?logo=render) |
-| **🎥 Video Walkthrough (Loom)** | [https://www.loom.com/share/711abafc1a9b48378e931d07608397bd](https://www.loom.com/share/711abafc1a9b48378e931d07608397bd) | ![Loom](https://img.shields.io/badge/Loom-3--4%20Min%20Demo-625DF5?logo=loom) |
-| **📄 Video Recording Script (PDF)** | [Vanix_Demo_Video_Script.pdf](./Vanix_Demo_Video_Script.pdf) | ![PDF](https://img.shields.io/badge/PDF-Script%20Guide-red) |
+| **🚀 Live Mobile Web App** | [https://vanix-assessment-mobile.vercel.app/](https://vanix-assessment-mobile.vercel.app/) | Deployed on **Vercel** — 100% responsive (mobile, tablet, desktop). |
+| **⚡ Live REST API Backend** | [https://vanix-iot-backend.onrender.com/api](https://vanix-iot-backend.onrender.com/api) | Deployed on **Render** with active endpoints & automated health checks. |
+| **🎥 Video Walkthrough (Loom)** | [https://www.loom.com/share/711abafc1a9b48378e931d07608397bd](https://www.loom.com/share/711abafc1a9b48378e931d07608397bd) | **3–4 minute walkthrough**: replay streaming, live alerts, and one-tap acknowledge. |
 
 ---
 
 ## 📑 Table of Contents
 1. [Architecture Overview](#-architecture-overview)
-2. [Quick Start & Setup](#-quick-start--setup)
-3. [Running Tests](#-running-tests)
+2. [Setup Steps](#-setup-steps)
+3. [How to Run Tests](#-how-to-run-tests)
 4. [Sample Dataset Analysis & Findings](#-sample-dataset-analysis--findings)
 5. [Decryption & Binary Packet Decoder](#-decryption--binary-packet-decoder)
 6. [Database Schema & Data Modeling](#-database-schema--data-modeling)
 7. [REST API Documentation](#-rest-api-documentation)
-8. [Replay Script Guide](#-replay-script-guide)
+8. [How to Run the Replay Script](#-how-to-run-the-replay-script)
 9. [Mobile Application](#-mobile-application)
 10. [High-Scale Architecture Note (50,000 Devices)](#-high-scale-architecture-note-50000-devices)
 11. [Bonus Tasks Implemented](#-bonus-tasks-implemented-10-points)
@@ -35,7 +39,7 @@ An enterprise-grade, end-to-end IoT ingestion backend and 100% responsive mobile
 ## 🏛 Architecture Overview
 
 ```
-[ Field Device ]
+[ Field Sensor Node ]
    │ (Measures Temperature & 16x 3-Axis Accelerometer Samples)
    ▼
 [ 256-byte Binary Packet ]
@@ -47,8 +51,8 @@ An enterprise-grade, end-to-end IoT ingestion backend and 100% responsive mobile
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          VANIX BACKEND SERVER                           │
 │                                                                         │
-│  1. Raw Packet Store ──► encrypted_packets                              │
-│  2. AES-256-GCM Decrypt ──► decrypted_packets (JSON)                    │
+│  1. Raw Packet Store ──► encrypted_packets (Audit Trail)                 │
+│  2. AES-256-GCM Decrypt ──► decrypted_packets (Plaintext Hex / JSON)    │
 │  3. Binary Decoder (Little-endian, Two's Complement, Checksum)          │
 │  4. Deduplication Engine (2-minute sequence window, handles 255 wrap)   │
 │  5. Metric Computation (Vector Activity Score from 16 samples)          │
@@ -80,78 +84,110 @@ An enterprise-grade, end-to-end IoT ingestion backend and 100% responsive mobile
 
 ---
 
-## 🚀 Quick Start & Setup
+## 🚀 Setup Steps
 
 ### Prerequisites
-- Node.js v18+ (tested on Node v20, v22, and v24)
-- npm v9+
-- *(Optional)* Docker & Docker Compose
-
-### 1. Local Setup
-
-```bash
-# 1. Clone repository
-git clone https://github.com/Sumit6307/Vanix-Assessment.git
-cd Vanix-Assessment
-
-# 2. Setup & start the Backend
-cd backend
-npm install
-
-# Copy environment template if not present:
-cp .env.example .env
-
-# Start backend server
-npm start
-# Server runs at: http://localhost:3000
-# REST API root:  http://localhost:3000/api
-# Healthcheck:    http://localhost:3000/api/health
-
-# 3. Setup & run the Mobile App
-cd ../mobile
-npm install
-
-# Option A: Run web client in browser
-npm run web
-
-# Option B: Run native client (Expo Go on physical phone or Android Emulator)
-npm start
-# Press 'a' for Android emulator, or scan the QR code with Expo Go!
-
-# Option C: Build static web bundle (served directly by backend Express at http://localhost:3000/)
-npm run build
-```
-
-### 2. Docker Compose (One-Command Launch)
-
-```bash
-docker-compose up --build
-```
-This boots the containerized backend with persistent SQLite database storage and automated healthcheck probes on port `3000`.
+- **Node.js**: v18+ (verified on Node v20, v22, and v24)
+- **npm**: v9+
+- *(Optional)* **Docker & Docker Compose**
 
 ---
 
-## 🧪 Running Tests
+### Method 1: Local Development Setup
 
-The automated test suite provides **100% test pass rate** covering all core requirements:
-- AES-256-GCM decryption with 16-byte authentication tag verification.
-- Zero-downtime key rotation (fallback to previous key during changeovers).
-- Binary decoding of assignment sample packet 8 with bit-for-bit precision.
-- Cross-validation against 10+ rows from the sample database (`sample_data.db`).
-- Little-endian unsigned and signed (two's complement) integer parsing.
-- 16-bit checksum verification (sum of bytes 0–251 mod 65536).
-- Tampered ciphertext rejection & corrupted payload error handling.
-- Full REST API integration (`/api/ingest`, `/api/devices`, `/api/alerts`).
-- 2-minute deduplication window and sequence counter wrap-around (255 → 0).
-- Alert rule evaluations (Over-temperature > 40°C, Inactive < 5 mg, Offline > 30 mins).
+#### 1. Clone Repository
+```bash
+git clone https://github.com/Sumit6307/Vanix-Assessment.git
+cd Vanix-Assessment
+```
 
-To execute the test suite:
+#### 2. Start the Backend Server
+```bash
+# Navigate to the backend directory
+cd backend
+
+# Install dependencies
+npm install
+
+# Setup environment variables (default template includes AES key and port)
+# On Linux/macOS:
+cp .env.example .env
+# On Windows PowerShell:
+Copy-Item .env.example .env
+
+# Start the server
+npm start
+```
+The backend server runs at `http://localhost:3000`.  
+- **REST API root:** `http://localhost:3000/api`  
+- **Healthcheck:** `http://localhost:3000/api/health`
+
+#### 3. Start the Mobile Application
+Open a new terminal:
+```bash
+# Navigate to the mobile directory
+cd Vanix-Assessment/mobile
+
+# Install dependencies
+npm install
+
+# Option A: Run web client in browser (Recommended for instant evaluation)
+npm run web
+# Opens at: http://localhost:8081
+
+# Option B: Run native client (Expo Go on iOS/Android or emulator)
+npm start
+# Press 'a' for Android emulator, or scan the QR code using Expo Go app on your phone!
+
+# Option C: Build static web bundle
+npm run build
+```
+
+---
+
+### Method 2: Docker Compose (One-Command Startup)
+
+From the project root:
+```bash
+docker-compose up --build
+```
+This automatically builds and boots the containerized backend server on port `3000` with persistent SQLite database storage and built-in health probes.
+
+---
+
+## 🧪 How to Run Tests
+
+The test suite validates **all requirements** across unit, integration, and security layers.
+
+### Run Tests:
 ```bash
 cd backend
 npm test
 ```
 
-### Test Output:
+### What the Test Suite Verifies:
+1. **AES-256-GCM Decryption:**
+   - 16-byte authentication tag verification.
+   - Tampered ciphertext rejection with explicit error responses.
+   - Zero-downtime key rotation (fallback to previous key during changeovers).
+2. **Binary Packet Decoding:**
+   - Exact bit-for-bit decoding of assignment sample packet 8.
+   - Cross-validation against 10+ rows from `sample_data.db`.
+   - Little-endian byte order for 32-bit and 64-bit integers.
+   - Signed two's complement parsing for sub-zero temperature values.
+   - 16-bit checksum verification (sum of bytes 0–251 mod 65536).
+3. **Deduplication Engine:**
+   - 2-minute sequence window duplicate suppression.
+   - Sequence number wrap-around handling (255 → 0).
+4. **Alert Rule Engine:**
+   - Over-temperature alert (> 40.0°C).
+   - Inactivity alert (< 5.0 mg average motion deviation).
+   - Offline alert (30 minutes of transmission silence).
+   - Acknowledgment workflow (`PATCH /api/alerts/:id`).
+5. **REST API Endpoints:**
+   - Full integration tests on `/api/ingest`, `/api/devices`, `/api/alerts`, and `/api/health`.
+
+### Test Execution Output:
 ```text
 PASS tests/packet.test.js
 PASS tests/api.test.js
@@ -168,7 +204,7 @@ Ran all test suites.
 
 ## 🔍 Sample Dataset Analysis & Findings
 
-Replaying `encrypted_packets.json` (1,574 transmissions over 1 hour from 5 devices) uncovers all key operational scenarios intentionally seeded into the test dataset:
+Replaying `encrypted_packets.json` (1,574 transmissions over 1 hour across 5 devices) reveals all operational behaviors seeded into the test dataset:
 
 | Device ID | Hardware Label | Operational Behavior in Dataset | Triggered Alerts |
 | :--- | :--- | :--- | :--- |
@@ -280,14 +316,14 @@ CREATE INDEX idx_alerts_time ON alerts(time_raised);
 Each packet contains 16 motion samples (X, Y, Z in milli-g):
 1. **Query Pattern:** The mobile application and analysis tools always fetch all 16 samples together for a reading (to plot waveform charts or compute FFT). Individual sample #7 is never queried independently.
 2. **Performance & Row Explosion:** Normalizing into a child table creates a 16x row explosion (1,041 readings = 16,656 child rows per hour). Joining this table on every reading query degrades performance without query benefits.
-3. **Transaction Atomicity:** Telemetry is stored in a single atomic INSERT transaction and served to clients in a single fast indexed row lookup.
+3. **Transaction Atomicity:** Telemetry is stored in a single atomic `INSERT` transaction and served to clients in a single fast indexed row lookup.
 
 ---
 
 ## 📡 REST API Documentation
 
-Base URL (Local): `http://localhost:3000/api`  
-Base URL (Cloud): `https://vanix-iot-backend.onrender.com/api`
+- **Base URL (Local):** `http://localhost:3000/api`  
+- **Base URL (Cloud):** `https://vanix-iot-backend.onrender.com/api`
 
 | Method | Endpoint | Description | Status Codes |
 | :--- | :--- | :--- | :--- |
@@ -302,10 +338,14 @@ Base URL (Cloud): `https://vanix-iot-backend.onrender.com/api`
 
 ---
 
-## ⏩ Replay Script Guide
+## ⏩ How to Run the Replay Script
 
-The replay script simulates real-time field traffic by streaming `encrypted_packets.json` to `POST /api/ingest`:
+The replay script simulates real-time field traffic by streaming `encrypted_packets.json` to `POST /api/ingest`.
 
+> [!NOTE]
+> The replay script is located in `backend/scripts/replay.js`. You can run it either from the **root directory** or from the **backend directory**.
+
+### Option A: From the Root Directory (`Vanix-Assessment/`)
 ```bash
 # 1. Stream to Local Backend (60x speed: 1 hour in 1 minute)
 node backend/scripts/replay.js --speed 60
@@ -317,13 +357,24 @@ node backend/scripts/replay.js --speed 60 --url https://vanix-iot-backend.onrend
 node backend/scripts/replay.js --speed 0 --url https://vanix-iot-backend.onrender.com/api/ingest
 ```
 
+### Option B: From the `backend/` Directory
+```bash
+cd backend
+
+# Stream to Local Backend (60x speed)
+node scripts/replay.js --speed 60
+
+# Stream to Live Cloud Backend on Render
+node scripts/replay.js --speed 60 --url https://vanix-iot-backend.onrender.com/api/ingest
+```
+
 ---
 
 ## 📱 Mobile Application
 
 The mobile app is built with **React Native / Expo** in `mobile/` and is **100% responsive** across smartphones (360px+), tablets, and desktop displays.
 
-### Screens & Responsive UI Architecture:
+### Screens & UI Architecture:
 1. **Screen 1: Device List Screen (Fleet Command Center):**
    - **Executive Header:** Live AES-256 stream status, Sentinel IoT badge, quick `Sync Fleet` refresh, and in-app `⚙ API CONFIG` modal.
    - **Inline Over-Temperature Push Alert:** High-visibility critical alert pill (`🔥 OVER-TEMP: SN-70003 (43.5°C) • Inspect →`) placed directly inside the navbar to the left of the Sync Fleet button.
@@ -415,18 +466,41 @@ All 5 bonus tasks listed in the assignment brief are implemented and verified:
 
 ## 📝 Assumptions & Design Decisions
 
-1. **Device Clock vs Server Clock:** Per assignment rule (*"Use the packet timestamp, not the server clock, for all rules"*), all alert calculations and time-range filters use the device clock timestamp.
-2. **Auto-Registration of Unknown Devices:** Packets arriving from unregistered device IDs are accepted, decrypted, stored in `readings`, and automatically registered in `devices` with an `Auto-registered` tag.
-3. **Duplicate Packet Storage:** Duplicate packets (same device ID and sequence number within 2 minutes) are stored in `encrypted_packets` for audit integrity, but their reading is omitted from `readings` and alert checks are skipped.
-4. **Inactive Threshold Selection (5.0 mg):** Resting gravity reads ~1000 mg. Minor sensor noise creates ±5–10 mg fluctuations. A threshold of 5.0 mg accurately identifies stationary devices (such as `SN-70004` which averages 1.43–1.66 mg) while preventing false alerts on moving hardware.
-5. **Signed Two's Complement for Temperature:** Temperature is parsed using `readInt16LE` divided by 100.0, correctly preserving negative values for sub-zero field nodes like `SN-70002` (-6.78°C).
+1. **Device Clock vs Server Clock:**  
+   Per the core requirement (*"Use the packet timestamp, not the server clock, for all rules"*), all time-series storage, alert evaluation, and historical range queries rely strictly on the 64-bit integer timestamp decoded from the binary packet payload.
+2. **Deduplication Window & Modulo 256 Sequence Wrapping:**  
+   The field gateway occasionally forward-duplicates identical packets within a short window. A packet is classified as duplicate if another packet with the exact same `device_id` and `sequence_number` was ingested within the past 2 minutes (`120 seconds`). The sequence counter is an 8-bit unsigned integer (`0..255`) that wraps from `255` back to `0`. Comparing both sequence and time window ensures normal wrapping after 256 transmissions is not falsely dropped as a duplicate.
+3. **Inactive Motion Threshold Selection (5.0 mg):**  
+   Earth's resting gravitational field exerts ~1000 mg of baseline acceleration. Natural sensor noise produces small variations of ±2–4 mg even when resting on a stable table. A threshold of 5.0 mg standard deviation across vector magnitude safely distinguishes active machine vibration from complete operational standstill (e.g., `SN-70004` which drops to 1.43–1.66 mg).
+4. **Signed Two's Complement for Sub-Zero Temperature:**  
+   Temperature is decoded as a signed 16-bit little-endian integer (`readInt16LE`) divided by `100.0`. This correctly preserves negative Celsius temperatures (e.g., `SN-70002` operating at -6.78°C in cold-chain storage) without unsigned overflow errors.
+5. **Auto-Registration of Unseen Devices:**  
+   When a packet from an unprovisioned hardware ID is decrypted successfully, the backend automatically registers the device in the `devices` table with default label metadata, ensuring immediate visibility in the fleet dashboard without manual database pre-seeding.
+6. **Audit Trail Preservation:**  
+   Raw encrypted payloads are preserved in `encrypted_packets` alongside gateway ID and IV for non-repudiation and security auditing, even if payload parsing or duplicate rejection occurs downstream.
 
 ---
 
 ## 🔮 What I Would Improve With More Time
 
-1. **Real-Time WebSocket / SSE Streaming:** Replace 15-second client polling with Server-Sent Events (SSE) or WebSockets so telemetry waveforms, temperature curves, and incoming alerts update on phone screens in sub-100ms real-time.
-2. **Native Push Notifications (FCM / APNs):** Integrate Firebase Cloud Messaging and Apple APNs to immediately push high-priority critical alerts (such as over-temperature > 40°C or sudden offline silence) to on-duty plant engineers even when the app is backgrounded.
-3. **Time-Series Columnar Storage & Downsampling:** Migrate long-term historical readings from SQLite to TimescaleDB or ClickHouse. Add continuous aggregate rollups (1-minute, 1-hour, 1-day averages) so years of historical telemetry can be rendered instantly without downloading raw point data.
-4. **Spectral Vibration Analysis (FFT on 3-Axis Samples):** Implement Fast Fourier Transform (FFT) analysis on the 16 accelerometer samples to detect motor vibration frequency peaks and predict bearing failures days before mechanical standstill.
-5. **Mutual TLS (mTLS) & Hardware Security Module (HSM):** Implement mutual TLS client certificates for gateway authentication and store master AES encryption keys in AWS KMS or HashiCorp Vault with automated key rotation schedules.
+1. **Real-Time WebSocket / SSE Streaming:**  
+   Replace client polling with Server-Sent Events (SSE) or WebSockets so that telemetry curves, motion readings, and incoming alerts update on phone screens in sub-100ms real-time as packets arrive.
+2. **Native Push Notifications (FCM / APNs):**  
+   Integrate Firebase Cloud Messaging (FCM) and Apple Push Notification Service (APNs) so that critical over-temperature (>40.0°C) and machine offline alarms trigger audible high-priority notifications on plant operators' mobile devices even when the app is backgrounded or the phone is locked.
+3. **Time-Series Columnar Storage & Downsampling:**  
+   Migrate long-term storage from SQLite to TimescaleDB or ClickHouse. Implement automated continuous aggregates (1-minute, 1-hour, and 1-day rollups) so querying multi-month historical trends remains instantaneous without transferring millions of raw data points.
+4. **Spectral Vibration Analysis (FFT on 3-Axis Samples):**  
+   Apply Fast Fourier Transform (FFT) on the 16 accelerometer samples to compute peak vibration frequencies and harmonic distortion, enabling predictive maintenance algorithms to flag motor bearing wear days before mechanical breakdown.
+5. **Mutual TLS (mTLS) & Hardware Security Module (HSM):**  
+   Enforce mutual TLS client certificates at the gateway layer and integrate with AWS KMS or HashiCorp Vault for automated periodic AES key rotation and secure hardware key storage.
+6. **Automated End-to-End (E2E) Browser & Mobile Tests:**  
+   Add Playwright or Detox automated test runs to continuously verify the acknowledgment flow, chart interactions, and responsive UI layouts across iOS, Android, and Desktop browsers on every commit.
+
+---
+
+## 👤 Author & Submission Details
+- **Candidate:** Sumit Kumar
+- **Repository:** [https://github.com/Sumit6307/Vanix-Assessment](https://github.com/Sumit6307/Vanix-Assessment)
+- **Live Mobile Web App:** [https://vanix-assessment-mobile.vercel.app/](https://vanix-assessment-mobile.vercel.app/)
+- **Live Backend API:** [https://vanix-iot-backend.onrender.com/api](https://vanix-iot-backend.onrender.com/api)
+- **Loom Walkthrough Video:** [https://www.loom.com/share/711abafc1a9b48378e931d07608397bd](https://www.loom.com/share/711abafc1a9b48378e931d07608397bd)
